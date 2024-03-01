@@ -1,0 +1,87 @@
+
+@startuml
+
+class User {
+  -userId:string
+  -password:string
+  -loginStatus:string
+  +verifyLogin()
+
+}
+
+class Admin extends User {
+  -adminName:string
+  -email:string
+  -phoneNumber:int
+  +updateCatalog()
+
+}
+
+class Customer extends User {
+  -customerName:string
+  -email:string
+  -phoneNumber:int
+  +signUp()
+  +signIn()
+  +browseCoffees()
+  +setFavourite()
+  +placeOrder()
+  +addToCart()
+  +viewOrderHistory
+}
+
+class CoffeeCatalog {
+  -catalogId:string
+  +addCoffeeItem()
+  +removeCoffeeItem()
+}
+
+class CoffeeItem {
+  -itemId: Int
+  -name: String
+  -specialIngredients: String
+  -roastLevel: String
+  -ratings: Int
+  -description: String
+}
+
+class FavouriteList {
+  -customerId:int
+  +viewFavouriteList()
+}
+
+class ShoppingCart {
+  -cartId:int
+  -customerId:int
+  +viewCartList()
+  +updateQuantity()
+  +placeOrder()
+
+}
+
+class Payments {
+  -paymentId:int
+  -paymentMethod:string
+  -paymentAmount:float
+  -shippingInfo:string
+  +processPayment()
+}
+
+class ShippingInfo {
+  -shippingId:int
+  -shippingType:string
+  -shippingCost:int
+  -shippingRegionId:int
+  +updateShippingInfo()
+}
+
+Admin "1" -- "1" CoffeeCatalog : updates
+Customer "1" -- "1" FavouriteList : has
+Customer "1" -- "1" ShoppingCart : has
+CoffeeCatalog "1" -- "*" CoffeeItem : contains
+FavouriteList "1" -- "*" CoffeeItem : contains
+ShoppingCart "1" -- "*" CoffeeItem : contains
+ShoppingCart "1" -- "1" Payments : processes
+Payments "*" -- "1" ShippingInfo : has
+
+@enduml

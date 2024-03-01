@@ -5,4 +5,5 @@
  * 
  */
 module Image_Sharing_App_Network_Programming_Server {
+	requires java.desktop;
 }
