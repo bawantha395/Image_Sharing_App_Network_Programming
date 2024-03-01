@@ -314,20 +314,19 @@
 
 
 
-
-
-
 package com.example.server;
 
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.ImageIcon;
 
 public class Server {
 
@@ -346,13 +345,16 @@ public class Server {
         jFrame.setSize(400, 400);
         jFrame.setLayout(new BorderLayout(10, 10));
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jFrame.getContentPane().setBackground(new Color(240, 240, 240)); // Light gray background
 
         JLabel jlTitle = new JLabel("Image Receiver", SwingConstants.CENTER);
         jlTitle.setFont(new Font("SansSerif", Font.BOLD, 25));
         jlTitle.setBorder(new EmptyBorder(20, 0, 10, 0));
+        jlTitle.setForeground(new Color(51, 102, 204)); // Blue text color
 
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.Y_AXIS));
+        jPanel.setBackground(new Color(240, 240, 240)); // Light gray background
 
         JScrollPane jScrollPane = new JScrollPane(jPanel);
         jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -379,15 +381,16 @@ public class Server {
                         byte[] fileContentBytes = new byte[fileContentLength];
                         dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
 
-                        JPanel jpFileRow = new JPanel();
-                        jpFileRow.setLayout(new BoxLayout(jpFileRow, BoxLayout.X_AXIS));
-                        jpFileRow.setName((String.valueOf(fileId)));
+                        JPanel jpFileRow = new JPanel(new BorderLayout());
+                        jpFileRow.setName(String.valueOf(fileId));
                         jpFileRow.addMouseListener(getMyMouseListener());
+                        jpFileRow.setBorder(new EmptyBorder(5, 10, 5, 10));
+                        jpFileRow.setBackground(new Color(255, 255, 255)); // White background
 
                         JLabel jlFileName = new JLabel(fileName);
-                        jlFileName.setFont(new Font("SansSerif", Font.BOLD, 20));
-                        jlFileName.setBorder(new EmptyBorder(10, 0, 10, 0));
-                        jpFileRow.add(jlFileName);
+                        jlFileName.setFont(new Font("SansSerif", Font.BOLD, 18));
+                        jlFileName.setBorder(new EmptyBorder(10, 10, 10, 10));
+                        jpFileRow.add(jlFileName, BorderLayout.CENTER);
                         jPanel.add(jpFileRow);
                         jFrame.validate();
 
@@ -410,8 +413,8 @@ public class Server {
         }
     }
 
-    public static MouseListener getMyMouseListener() {
-        return new MouseListener() {
+    public static MouseAdapter getMyMouseListener() {
+        return new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 JPanel jPanel = (JPanel) e.getSource();
@@ -419,92 +422,64 @@ public class Server {
 
                 for (MyImage myImage : myImages) {
                     if (myImage.getId() == fileId) {
-                        JFrame jfPreview = createFrame(myImage.getName(), myImage.getData(), myImage.getFileExtension());
+                        JFrame jfPreview = createFrame(myImage.getName(), myImage.getData());
                         jfPreview.setVisible(true);
                     }
                 }
             }
-
-            @Override
-            public void mousePressed(MouseEvent e) {}
-
-            @Override
-            public void mouseReleased(MouseEvent e) {}
-
-            @Override
-            public void mouseEntered(MouseEvent e) {}
-
-            @Override
-            public void mouseExited(MouseEvent e) {}
         };
     }
 
-    public static JFrame createFrame(String fileName, byte[] fileData, String fileExtension) {
+    public static JFrame createFrame(String fileName, byte[] fileData) {
         JFrame jFrame = new JFrame("Image Downloader");
-        jFrame.setSize(400, 400);
+        jFrame.setSize(600, 600);
+        jFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        jFrame.getContentPane().setBackground(new Color(240, 240, 240)); // Light gray background
 
-        JPanel jPanel = new JPanel();
-        jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.Y_AXIS));
+        JPanel jPanel = new JPanel(new BorderLayout());
+        jPanel.setBackground(new Color(240, 240, 240)); // Light gray background
 
         JLabel jlTitle = new JLabel("Image Downloader");
-        jlTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
         jlTitle.setFont(new Font("Arial", Font.BOLD, 25));
         jlTitle.setBorder(new EmptyBorder(20, 0, 10, 0));
+        jlTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        jlTitle.setForeground(new Color(51, 102, 204)); // Blue text color
+        jPanel.add(jlTitle, BorderLayout.NORTH);
 
-        JLabel jlPrompt = new JLabel("Are you sure you want to download " + fileName + "?");
-        jlPrompt.setFont(new Font("Arial", Font.BOLD, 20));
-        jlPrompt.setBorder(new EmptyBorder(20, 0, 10, 0));
-        jlPrompt.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel jlImage = new JLabel(new ImageIcon(fileData));
+        jlImage.setHorizontalAlignment(SwingConstants.CENTER);
+        jPanel.add(new JScrollPane(jlImage), BorderLayout.CENTER);
 
-        JButton jbYes = new JButton("Yes");
-        jbYes.setPreferredSize(new Dimension(150, 75));
-        jbYes.setFont(new Font("Arial", Font.BOLD, 20));
-
-        JButton jbNo = new JButton("No");
-        jbNo.setPreferredSize(new Dimension(150, 75));
-        jbNo.setFont(new Font("Arial", Font.BOLD, 20));
-
-        JLabel jlFileContent = new JLabel();
-        jlFileContent.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JPanel jpButtons = new JPanel();
-        jpButtons.setBorder(new EmptyBorder(20, 0, 10, 0));
-
-        jpButtons.add(jbYes);
-        jpButtons.add(jbNo);
-
-        jlFileContent.setIcon(new ImageIcon(fileData));
-
-        jbYes.addActionListener(new ActionListener() {
+        JButton jbDownload = new JButton("Download");
+        jbDownload.setFont(new Font("Arial", Font.BOLD, 20));
+        jbDownload.setBackground(new Color(51, 153, 255)); // Blue button background
+        jbDownload.setForeground(Color.WHITE); // White button text color
+        jbDownload.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                File fileToDownload = new File(fileName);
-                try {
-                    FileOutputStream fileOutputStream = new FileOutputStream(fileToDownload);
-                    fileOutputStream.write(fileData);
-                    fileOutputStream.close();
-                    jFrame.dispose();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-
-        jbNo.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+                downloadImage(fileName, fileData);
                 jFrame.dispose();
             }
         });
 
-        jPanel.add(jlTitle);
-        jPanel.add(jlPrompt);
-        jPanel.add(jlFileContent);
-        jPanel.add(jpButtons);
+        JPanel jpButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        jpButtons.add(jbDownload);
+        jPanel.add(jpButtons, BorderLayout.SOUTH);
 
         jFrame.add(jPanel);
-
         return jFrame;
+    }
+
+    public static void downloadImage(String fileName, byte[] fileData) {
+        File fileToDownload = new File(fileName);
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(fileToDownload);
+            fileOutputStream.write(fileData);
+            fileOutputStream.close();
+            System.out.println("Image downloaded: " + fileName);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 }
 

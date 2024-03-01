@@ -146,22 +146,23 @@
 //}
 
 
-
 package com.example.client;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.net.Socket;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.Socket;
 
 public class Client {
 
     public static void main(String[] args) {
         try {
+            // Setting Nimbus Look and Feel
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (Exception e) {
             e.printStackTrace();
@@ -169,82 +170,112 @@ public class Client {
 
         final File[] fileToSend = new File[1];
 
+        SwingUtilities.invokeLater(() -> createAndShowGUI(fileToSend));
+    }
+
+    private static void createAndShowGUI(File[] fileToSend) {
         JFrame jFrame = new JFrame("Client Image Sender");
         jFrame.setSize(450, 450);
-        jFrame.setLayout(new BorderLayout(10, 10));
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JLabel jlTitle = new JLabel("Image Sender", SwingConstants.CENTER);
-        jlTitle.setFont(new Font("SansSerif", Font.BOLD, 25));
-        jlTitle.setBorder(new EmptyBorder(20, 0, 10, 0));
+        // Main panel with background color
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        mainPanel.setBackground(new Color(51, 51, 51)); // Dark gray background
 
-        JLabel jlFileName = new JLabel("Choose an image to send.", SwingConstants.CENTER);
-        jlFileName.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        // Title label with custom font and color
+        JLabel titleLabel = new JLabel("Image Sender", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        titleLabel.setForeground(Color.WHITE);
 
-        JButton jbSendFile = new JButton("Send Image");
-        jbSendFile.setFont(new Font("SansSerif", Font.BOLD, 15));
+        // File name label with custom font and color
+        JLabel fileNameLabel = new JLabel("Choose an image to send.", SwingConstants.CENTER);
+        fileNameLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        fileNameLabel.setForeground(Color.WHITE);
 
-        JButton jbChooseFile = new JButton("Choose Image");
-        jbChooseFile.setFont(new Font("SansSerif", Font.BOLD, 15));
+        // Buttons with custom styling
+        JButton chooseButton = new JButton("Choose Image");
+        chooseButton.setFont(new Font("Arial", Font.BOLD, 16));
+        chooseButton.setBackground(new Color(100, 149, 237)); // Cornflower blue
+        chooseButton.setForeground(Color.WHITE);
+        JButton sendButton = new JButton("Send Image");
+        sendButton.setFont(new Font("Arial", Font.BOLD, 16));
+        sendButton.setBackground(new Color(60, 179, 113)); // Medium sea green
+        sendButton.setForeground(Color.WHITE);
 
-        JPanel jpButtons = new JPanel(new FlowLayout());
-        jpButtons.add(jbChooseFile);
-        jpButtons.add(jbSendFile);
+        // Button panel with custom layout and spacing
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        buttonPanel.setBackground(new Color(51, 51, 51)); // Dark gray background
+        buttonPanel.add(chooseButton);
+        buttonPanel.add(sendButton);
 
-        jbChooseFile.addActionListener(new ActionListener() {
+        // Add action listeners to buttons
+        chooseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser jFileChooser = new JFileChooser();
-                jFileChooser.setDialogTitle("Choose an image to send.");
-                jFileChooser.setAcceptAllFileFilterUsed(false);
-                jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes()));
-
-                if (jFileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                    fileToSend[0] = jFileChooser.getSelectedFile();
-                    jlFileName.setText("Selected: " + fileToSend[0].getName());
-                }
+                chooseImage(fileToSend, fileNameLabel);
             }
         });
 
-        jbSendFile.addActionListener(new ActionListener() {
+        sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (fileToSend[0] == null) {
-                    jlFileName.setText("Please choose an image to send first!");
-                } else {
-                    try {
-                        FileInputStream fileInputStream = new FileInputStream(fileToSend[0].getAbsolutePath());
-                        Socket socket = new Socket("localhost", 1234);
-                        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-
-                        String fileName = fileToSend[0].getName();
-                        byte[] fileNameBytes = fileName.getBytes();
-
-                        byte[] fileBytes = new byte[(int) fileToSend[0].length()];
-                        fileInputStream.read(fileBytes);
-
-                        dataOutputStream.writeInt(fileNameBytes.length);
-                        dataOutputStream.write(fileNameBytes);
-
-                        dataOutputStream.writeInt(fileBytes.length);
-                        dataOutputStream.write(fileBytes);
-
-                        fileInputStream.close();
-                        dataOutputStream.close();
-                        socket.close();
-
-                        jlFileName.setText("Image sent successfully: " + fileToSend[0].getName());
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                        jlFileName.setText("An error occurred: " + ex.getMessage());
-                    }
-                }
+                sendImage(fileToSend, fileNameLabel);
             }
         });
 
-        jFrame.add(jlTitle, BorderLayout.NORTH);
-        jFrame.add(jlFileName, BorderLayout.CENTER);
-        jFrame.add(jpButtons, BorderLayout.SOUTH);
+        // Add components to main panel
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+        mainPanel.add(fileNameLabel, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Add main panel to frame
+        jFrame.getContentPane().add(mainPanel);
         jFrame.setVisible(true);
+    }
+
+    private static void chooseImage(File[] fileToSend, JLabel fileNameLabel) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Choose an image to send.");
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes()));
+
+        if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            fileToSend[0] = fileChooser.getSelectedFile();
+            fileNameLabel.setText("Selected: " + fileToSend[0].getName());
+        }
+    }
+
+    private static void sendImage(File[] fileToSend, JLabel fileNameLabel) {
+        if (fileToSend[0] == null) {
+            fileNameLabel.setText("Please choose an image to send first!");
+        } else {
+            try {
+                FileInputStream fileInputStream = new FileInputStream(fileToSend[0]);
+                Socket socket = new Socket("localhost", 1234);
+                DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
+                String fileName = fileToSend[0].getName();
+                byte[] fileNameBytes = fileName.getBytes();
+
+                byte[] fileBytes = new byte[(int) fileToSend[0].length()];
+                fileInputStream.read(fileBytes);
+
+                dataOutputStream.writeInt(fileNameBytes.length);
+                dataOutputStream.write(fileNameBytes);
+
+                dataOutputStream.writeInt(fileBytes.length);
+                dataOutputStream.write(fileBytes);
+
+                fileInputStream.close();
+                dataOutputStream.close();
+                socket.close();
+
+                fileNameLabel.setText("Image sent successfully: " + fileToSend[0].getName());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                fileNameLabel.setText("An error occurred: " + ex.getMessage());
+            }
+        }
     }
 }
