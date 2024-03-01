@@ -1,4 +1,4 @@
-package com.example;
+package com.Client;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
